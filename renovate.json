@@ -7,6 +7,7 @@
     "main"
   ],
   "fork": true,
+  "forkProcessing": "enabled"
   "pr": true,
   "prTitle": "New version in original repo",
   "prBody": "There have been new commits in the original repository!",
