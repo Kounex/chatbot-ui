@@ -1,0 +1,19 @@
+{
+  "extends": [
+    "config:base"
+  ],
+  "platform": "github",
+  "baseBranches": [
+    "main"
+  ],
+  "fork": true,
+  "pr": true,
+  "prTitle": "New version in original repo",
+  "prBody": "There have been new commits in the original repository!",
+  "labels": [
+    "dependencies"
+  ],
+  "schedule": [
+    "every hour"
+  ]
+}
