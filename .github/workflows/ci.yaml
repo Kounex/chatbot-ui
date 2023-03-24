@@ -36,8 +36,7 @@ jobs:
             org.opencontainers.image.description=Next.js image for the whole Chatbot UI application
             org.opencontainers.image.vendor=Kounex
           tags: |
-            type=semver,pattern={{version}},value=${{ env.APP_VERSION }}-rc.${{ github.run_number }}
-            # type=raw,value=${{ env.APP_VERSION }}-rc.${{ github.run_number }},priority=1000
+            type=semver,pattern={{version}},value=${{ env.APP_VERSION }}-rc.${{ github.run_number }},priority=50
             type=ref,event=branch
             type=raw,value=latest
             type=sha
