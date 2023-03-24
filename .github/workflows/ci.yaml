@@ -26,7 +26,7 @@ jobs:
         uses: docker/metadata-action@v3
         with:
           images: |
-            ghcr.io/kounex/${{ github.event.repository.name }}
+            ghcr.io/${{ github.repository }}
           labels: |
             org.opencontainers.image.title=chatbot-ui
             org.opencontainers.image.description=Next.js image for the whole Chatbot UI application
@@ -49,5 +49,5 @@ jobs:
         uses: docker/build-push-action@v4
         with:
           push: true
-          tags: kounex/${{ github.event.repository.name }}:${{ env.APP_VERSION }}-rc.${{ github.run_number }},${{ steps.meta.outputs.tags }}
+          tags: ${{ env.APP_VERSION }}-rc.${{ github.run_number }},${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
