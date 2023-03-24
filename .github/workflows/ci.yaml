@@ -26,7 +26,7 @@ jobs:
         uses: docker/metadata-action@v3
         with:
           images: |
-            ghcr.io/${{ github.repository }}
+            ghcr.io/kounex/${{ github.event.repository.name }}
           labels: |
             org.opencontainers.image.title=chatbot-ui
             org.opencontainers.image.description=Next.js image for the whole Chatbot UI application
