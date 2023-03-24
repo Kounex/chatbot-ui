@@ -49,5 +49,5 @@ jobs:
         uses: docker/build-push-action@v4
         with:
           push: true
-          tags: ${{ github.repository_name }}:${{ env.APP_VERSION }}-rc.${{ github.run_number }},${{ steps.meta.outputs.tags }}
+          tags: ${{ github.event.repository.name }}:${{ env.APP_VERSION }}-rc.${{ github.run_number }},${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
