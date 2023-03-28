@@ -1,14 +1,21 @@
-import {
-  Conversation,
-  ErrorMessage,
-  KeyValuePair,
-  Message,
-  OpenAIModel,
-} from '@/types';
+import { Conversation, Message } from '@/types/chat';
+import { KeyValuePair } from '@/types/data';
+import { ErrorMessage } from '@/types/error';
+import { OpenAIModel } from '@/types/openai';
+import { Prompt } from '@/types/prompt';
 import { throttle } from '@/utils';
-import { IconClearAll, IconSettings } from '@tabler/icons-react';
+import { IconClearAll, IconKey, IconSettings } from '@tabler/icons-react';
 import { useTranslation } from 'next-i18next';
-import { FC, memo, MutableRefObject, useEffect, useRef, useState } from 'react';
+import {
+  FC,
+  memo,
+  MutableRefObject,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from 'react';
+import { Spinner } from '../Global/Spinner';
 import { ChatInput } from './ChatInput';
 import { ChatLoader } from './ChatLoader';
 import { ChatMessage } from './ChatMessage';
@@ -23,8 +30,8 @@ interface Props {
   serverSideApiKeyIsSet: boolean;
   messageIsStreaming: boolean;
   modelError: ErrorMessage | null;
-  messageError: boolean;
   loading: boolean;
+  prompts: Prompt[];
   onSend: (message: Message, deleteCount?: number) => void;
   onUpdateConversation: (
     conversation: Conversation,
@@ -42,8 +49,8 @@ export const Chat: FC<Props> = memo(
     serverSideApiKeyIsSet,
     messageIsStreaming,
     modelError,
-    messageError,
     loading,
+    prompts,
     onSend,
     onUpdateConversation,
     onEditMessage,
@@ -57,6 +64,27 @@ export const Chat: FC<Props> = memo(
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const chatContainerRef = useRef<HTMLDivElement>(null);
     const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+    const scrollToBottom = useCallback(() => {
+      if (autoScrollEnabled) {
+        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+        textareaRef.current?.focus();
+      }
+    }, [autoScrollEnabled]);
+
+    const handleScroll = () => {
+      if (chatContainerRef.current) {
+        const { scrollTop, scrollHeight, clientHeight } =
+          chatContainerRef.current;
+        const bottomTolerance = 30;
+
+        if (scrollTop + clientHeight < scrollHeight - bottomTolerance) {
+          setAutoScrollEnabled(false);
+        } else {
+          setAutoScrollEnabled(true);
+        }
+      }
+    };
 
     const handleSettings = () => {
       setShowSettings(!showSettings);
@@ -110,24 +138,31 @@ export const Chat: FC<Props> = memo(
       <div className="overflow-none relative flex-1 bg-white dark:bg-[#343541]">
         {!(apiKey || serverSideApiKeyIsSet) ? (
           <div className="mx-auto flex h-full w-[300px] flex-col justify-center space-y-6 sm:w-[500px]">
+            <div className="mx-auto mb-5 text-gray-800 dark:text-gray-100">
+              <IconKey size={36} />
+            </div>
             <div className="text-center text-2xl font-semibold text-gray-800 dark:text-gray-100">
               {t('OpenAI API Key Required')}
             </div>
             <div className="text-center text-gray-500 dark:text-gray-400">
-              {t(
-                'Please set your OpenAI API key in the bottom left of the sidebar.',
-              )}
-            </div>
-            <div className="text-center text-gray-500 dark:text-gray-400">
-              {t("If you don't have an OpenAI API key, you can get one here: ")}
-              <a
-                href="https://platform.openai.com/account/api-keys"
-                target="_blank"
-                rel="noreferrer"
-                className="text-blue-500 hover:underline"
-              >
-                openai.com
-              </a>
+              <div className="mb-2">
+                {t(
+                  'Please set your OpenAI API key in the bottom left of the sidebar.',
+                )}
+              </div>
+              <div>
+                {t(
+                  "If you don't have an OpenAI API key, you can get one here: ",
+                )}
+                <a
+                  href="https://platform.openai.com/account/api-keys"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-blue-500 hover:underline"
+                >
+                  openai.com
+                </a>
+              </div>
             </div>
           </div>
         ) : modelError ? (
@@ -142,11 +177,17 @@ export const Chat: FC<Props> = memo(
                 <>
                   <div className="mx-auto flex w-[350px] flex-col space-y-10 pt-12 sm:w-[600px]">
                     <div className="text-center text-3xl font-semibold text-gray-800 dark:text-gray-100">
-                      {models.length === 0 ? t('Loading...') : 'Chatbot UI'}
+                      {models.length === 0 ? (
+                        <div>
+                          <Spinner size="16px" className="mx-auto" />
+                        </div>
+                      ) : (
+                        'Chatbot UI'
+                      )}
                     </div>
 
                     {models.length > 0 && (
-                      <div className="flex h-full flex-col space-y-4 rounded border border-neutral-200 p-4 dark:border-neutral-600">
+                      <div className="flex h-full flex-col space-y-4 rounded-lg border border-neutral-200 p-4 dark:border-neutral-600">
                         <ModelSelect
                           model={conversation.model}
                           models={models}
@@ -160,6 +201,7 @@ export const Chat: FC<Props> = memo(
 
                         <SystemPrompt
                           conversation={conversation}
+                          prompts={prompts}
                           onChangePrompt={(prompt) =>
                             onUpdateConversation(conversation, {
                               key: 'prompt',
@@ -187,8 +229,8 @@ export const Chat: FC<Props> = memo(
                     />
                   </div>
                   {showSettings && (
-                    <div className="mx-auto flex w-[200px] flex-col space-y-10 pt-8 sm:w-[300px]">
-                      <div className="flex h-full flex-col space-y-4 rounded border border-neutral-500 p-2">
+                    <div className="flex flex-col space-y-10 md:mx-auto md:max-w-xl md:gap-6 md:py-3 md:pt-6 lg:max-w-2xl lg:px-0 xl:max-w-3xl">
+                      <div className="flex h-full flex-col space-y-4 border-b border-neutral-200 p-4 dark:border-neutral-600 md:rounded-lg md:border">
                         <ModelSelect
                           model={conversation.model}
                           models={models}
@@ -226,8 +268,10 @@ export const Chat: FC<Props> = memo(
               stopConversationRef={stopConversationRef}
               textareaRef={textareaRef}
               messageIsStreaming={messageIsStreaming}
-              conversationIsEmpty={conversation.messages.length > 0}
+              conversationIsEmpty={conversation.messages.length === 0}
+              messages={conversation.messages}
               model={conversation.model}
+              prompts={prompts}
               onSend={(message) => {
                 setCurrentMessage(message);
                 onSend(message);
