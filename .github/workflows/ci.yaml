@@ -4,7 +4,7 @@ on:
     branches: [main]
     paths-ignore:
       - '**/README.md'
-      - '.github/workflows/sync.yaml'
+      - '.github/**'
       - '**/renovate.*'
 
   # Allows you to run this workflow manually from the Actions tab

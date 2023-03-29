@@ -3,9 +3,17 @@ on:
   push:
     branches:
       - main
+    paths-ignore:
+      - '**/README.md'
+      - '.github/**'
+      - '**/renovate.*'
   pull_request:
     branches:
       - main
+    paths-ignore:
+      - '**/README.md'
+      - '.github/**'
+      - '**/renovate.*'
 
 jobs:
   test:
